@@ -6,7 +6,8 @@
 
   async function fetchImages() {
     try {
-      const response = await fetch("http://localhost:8080/images");
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const response = await fetch(`${apiUrl}/images`);  
       if (!response.ok) {
         throw new Error("Erro ao carregar imagens");
       }
