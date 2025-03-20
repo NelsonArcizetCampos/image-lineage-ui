@@ -3,15 +3,27 @@
 
   let images = [];
   let error = null;
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
   async function fetchImages() {
     try {
-    const apiUrl = import.meta.env.VITE_API_URL;
-    const response = await fetch(`${apiUrl}/images`);  
+      const response = await fetch(`${apiUrl}/images`);
+
       if (!response.ok) {
-        throw new Error("Erro ao carregar imagens");
+        throw new Error(`Erro ao carregar imagens (${response.status})`);
       }
-      images = await response.json();
+
+      const data = await response.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error("Formato inesperado de resposta da API");
+      }
+
+      images = data.map(img => ({
+        ...img,
+        url: `${apiUrl}/${img.url}`
+      }));
+
     } catch (err) {
       error = err.message;
     }
@@ -31,7 +43,7 @@
     <div class="gallery">
       {#each images as image}
         <div class="image-container">
-          <img src={"${apiUrl}" + image.url} alt={image.filename} />
+          <img src={image.url} alt={image.filename} />
         </div>
       {/each}
     </div>
