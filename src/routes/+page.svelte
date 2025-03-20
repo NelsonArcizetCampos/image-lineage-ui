@@ -31,7 +31,7 @@
     <div class="gallery">
       {#each images as image}
         <div class="image-container">
-          <img src={"http://localhost:8080/" + image.url} alt={image.filename} />
+          <img src={"${apiUrl}" + image.url} alt={image.filename} />
         </div>
       {/each}
     </div>
