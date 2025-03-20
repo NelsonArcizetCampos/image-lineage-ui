@@ -7,7 +7,19 @@
 
   async function fetchImages() {
     try {
-      const response = await fetch(`${apiUrl}/images`);
+      // Recupera o token do localStorage
+      const token = localStorage.getItem('authToken');
+
+      if (!token) {
+        throw new Error("Usuário não autenticado. Faça login novamente.");
+      }
+
+      // Faz a requisição para a API, incluindo o token no cabeçalho
+      const response = await fetch(`${apiUrl}/images`, {
+        headers: {
+          'Authorization': `Bearer ${token}` // Envia o token no cabeçalho
+        }
+      });
 
       if (!response.ok) {
         throw new Error(`Erro ao carregar imagens (${response.status})`);
@@ -87,4 +99,3 @@
     font-weight: bold;
   }
 </style>
-
