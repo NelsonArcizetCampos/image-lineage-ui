@@ -1,47 +1,34 @@
-<script>
-  import { onMount } from "svelte";
+<script lang="ts">
+  import { onMount } from "svelte"
+  import { createClient } from "@supabase/supabase-js"
+  import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public'
 
-  let images = [];
-  let error = null;
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
+  const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY)
+
+  let images: { id: string; url: string }[] = []
+  let error: string | null = null
 
   async function fetchImages() {
-    try {
-      // Recupera o token do localStorage
-      const token = localStorage.getItem('authToken');
+    error = null
 
-      if (!token) {
-        throw new Error("Usuário não autenticado. Faça login novamente.");
-      }
+    const { data, error: fetchError } = await supabase
+      .from('images')
+      .select('*')
 
-      // Faz a requisição para a API, incluindo o token no cabeçalho
-      const response = await fetch(`${apiUrl}/images`, {
-        headers: {
-          'Authorization': `Bearer ${token}` // Envia o token no cabeçalho
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro ao carregar imagens (${response.status})`);
-      }
-
-      const data = await response.json();
-
-      if (!Array.isArray(data)) {
-        throw new Error("Formato inesperado de resposta da API");
-      }
-
-      images = data.map(img => ({
-        ...img,
-        url: `${apiUrl}/${img.url}`
-      }));
-
-    } catch (err) {
-      error = err.message;
+    if (fetchError) {
+      error = fetchError.message
+      return
     }
+
+    if (!Array.isArray(data)) {
+      error = 'Resposta inesperada da API.'
+      return
+    }
+
+    images = data
   }
 
-  onMount(fetchImages);
+  onMount(fetchImages)
 </script>
 
 <main>
@@ -55,7 +42,7 @@
     <div class="gallery">
       {#each images as image}
         <div class="image-container">
-          <img src={image.url} alt={image.filename} />
+          <img src={image.url} alt="Imagem" />
         </div>
       {/each}
     </div>
@@ -81,16 +68,16 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 250px; /* Altura sincronizada */
-    background: #f3f3f3; /* Fundo neutro */
+    height: 250px;
+    background: #f3f3f3;
     border-radius: 5px;
     box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
   }
 
   img {
     max-width: 100%;
-    height: 100%; /* Garante altura sincronizada */
-    object-fit: cover; /* Mantém proporção e recorta o excesso */
+    height: 100%;
+    object-fit: cover;
     border-radius: 5px;
   }
 
@@ -99,3 +86,4 @@
     font-weight: bold;
   }
 </style>
+

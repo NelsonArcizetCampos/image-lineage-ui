@@ -1,46 +1,33 @@
-<script>
-  import { goto } from '$app/navigation';
+<script lang="ts">
+  import { goto } from '$app/navigation'
+  import { createClient } from '@supabase/supabase-js'
+  import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public'
 
-  // URL da API (definida no ambiente ou padrão para localhost:8080)
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8080";
+  const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY)
 
-  // Estado do formulário
-  let email = '';
-  let password = '';
-  let error = ''; // Mensagem de erro, se houver
+  let email = ''
+  let password = ''
+  let error = ''
 
-  // Função para lidar com o envio do formulário
-  async function handleLogin(event) {
-    event.preventDefault(); // Evita o recarregamento da página
+  async function handleLogin(event: Event) {
+    event.preventDefault()
+    error = ''
 
-    try {
-      // Faz a requisição para a API de login
-      const response = await fetch(`${apiUrl}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+    const { data, error: loginError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    })
 
-      // Verifica se a requisição foi bem-sucedida
-      if (response.ok) {
-        const data = await response.json();
-
-        // Armazena o token no localStorage (ou em cookies, se preferir)
-        localStorage.setItem('authToken', data.token);
-
-        // Redireciona o usuário para a página inicial (ex: /dashboard)
-        goto('/');
-      } else {
-        // Exibe mensagem de erro se a autenticação falhar
-        const errorData = await response.json();
-        error = errorData.message || 'Erro ao fazer login. Verifique suas credenciais.';
-      }
-    } catch (err) {
-      // Exibe mensagem de erro em caso de falha na requisição
-      error = 'Erro ao conectar ao servidor. Tente novamente mais tarde.';
+    if (loginError) {
+      error = loginError.message || 'Erro ao fazer login.'
+      return
     }
+
+    // Guarda o token localmente se quiseres
+    localStorage.setItem('authToken', data.session.access_token)
+
+    // Redireciona após login
+    goto('/')
   }
 </script>
 
@@ -103,3 +90,4 @@
     <div class="error">{error}</div>
   {/if}
 </div>
+
